@@ -323,9 +323,59 @@ async def root():
         "description": "MCP server for processing meeting feedback",
         "endpoints": {
             "mcp": "/mcp",
-            "health": "/health"
+            "health": "/health",
+            "process_feedback": "/process-feedback"
         }
     }
+
+# ============================================
+# REST Endpoint for ChatGPT Actions
+# ============================================
+
+class FeedbackRequest(BaseModel):
+    """Request model for processing feedback - used by ChatGPT Actions"""
+    feedback_items: list[FeedbackItem]
+
+class FeedbackResponse(BaseModel):
+    """Response model with HTML widget"""
+    success: bool
+    total_items: int
+    critical_count: int
+    improvement_count: int
+    nice_to_have_count: int
+    html_widget: str
+
+@app.post("/process-feedback", response_model=FeedbackResponse, 
+          summary="Process meeting feedback",
+          description="Recibe items de feedback de reuniones y devuelve un widget HTML organizado por prioridad",
+          tags=["Feedback"])
+async def process_feedback(request: FeedbackRequest):
+    """
+    Procesa items de feedback de reuniones y genera un widget HTML visual.
+    
+    - **feedback_items**: Lista de items con descripción, categoría (UI/UX/Copy/Tech), 
+      prioridad (critical/improvement/nice_to_have) y quote original.
+    
+    Retorna un widget HTML con los items agrupados por prioridad y contadores.
+    """
+    feedback_items = [item.dict() for item in request.feedback_items]
+    html_widget = generate_html_widget(feedback_items)
+    
+    # Count by priority
+    counts = {"critical": 0, "improvement": 0, "nice_to_have": 0}
+    for item in feedback_items:
+        priority = item.get("priority", "nice_to_have")
+        if priority in counts:
+            counts[priority] += 1
+    
+    return FeedbackResponse(
+        success=True,
+        total_items=len(feedback_items),
+        critical_count=counts["critical"],
+        improvement_count=counts["improvement"],
+        nice_to_have_count=counts["nice_to_have"],
+        html_widget=html_widget
+    )
 
 if __name__ == "__main__":
     import uvicorn
