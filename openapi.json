@@ -1,0 +1,130 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Feedback Meeting Processor",
+        "description": "Procesa feedback de reuniones y genera widgets HTML organizados por prioridad",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://feedback-meeting-processor.onrender.com"
+        }
+    ],
+    "paths": {
+        "/process-feedback": {
+            "post": {
+                "operationId": "processMeetingFeedback",
+                "summary": "Procesa items de feedback de reuniones",
+                "description": "Recibe una lista de items de feedback con categoría y prioridad, y devuelve un widget HTML visual organizado",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FeedbackRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Feedback procesado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedbackResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "FeedbackItem": {
+                "type": "object",
+                "required": [
+                    "item",
+                    "category",
+                    "priority",
+                    "original_quote"
+                ],
+                "properties": {
+                    "item": {
+                        "type": "string",
+                        "description": "Descripción del punto de feedback"
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "UI",
+                            "UX",
+                            "Copy",
+                            "Tech"
+                        ],
+                        "description": "Categoría: UI (interfaz), UX (experiencia), Copy (textos), Tech (técnico)"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "critical",
+                            "improvement",
+                            "nice_to_have"
+                        ],
+                        "description": "Prioridad: critical (crítico), improvement (mejora), nice_to_have (deseable)"
+                    },
+                    "original_quote": {
+                        "type": "string",
+                        "description": "Frase original de la reunión de donde se extrae el feedback"
+                    }
+                }
+            },
+            "FeedbackRequest": {
+                "type": "object",
+                "required": [
+                    "feedback_items"
+                ],
+                "properties": {
+                    "feedback_items": {
+                        "type": "array",
+                        "description": "Lista de items de feedback extraídos de la transcripción",
+                        "items": {
+                            "$ref": "#/components/schemas/FeedbackItem"
+                        }
+                    }
+                }
+            },
+            "FeedbackResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "Indica si el procesamiento fue exitoso"
+                    },
+                    "total_items": {
+                        "type": "integer",
+                        "description": "Total de items procesados"
+                    },
+                    "critical_count": {
+                        "type": "integer",
+                        "description": "Cantidad de items críticos"
+                    },
+                    "improvement_count": {
+                        "type": "integer",
+                        "description": "Cantidad de items de mejora"
+                    },
+                    "nice_to_have_count": {
+                        "type": "integer",
+                        "description": "Cantidad de items nice-to-have"
+                    },
+                    "html_widget": {
+                        "type": "string",
+                        "description": "Widget HTML con el feedback organizado visualmente"
+                    }
+                }
+            }
+        }
+    }
+}
